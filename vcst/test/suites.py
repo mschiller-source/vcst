@@ -11,18 +11,8 @@ from multiprocessing import Process, Value
 from vcst.utils.mod_utils import import_mod
 
 class IndependentCocoSimTestCase(IndependentSimTestCase):
-    def __init__(self, test, config, simulator_if, elaborate_only=False):
-        self._name = "%s.%s" % (config.library_name, config.design_unit_name)
-
-        if not config.is_default:
-            self._name += "." + config.name
-
-        if test.is_explicit:
-            self._name += "." + test.name
-        elif config.is_default:
-            # JUnit XML test reports wants three dotted name hierarchies
-            self._name += ".all"
-
+    def __init__(self, test, config, simulator_if, seed, *, elaborate_only=False):
+        self._name = self.get_name(test, config)
         self._configuration = config
         self._test = test
 
@@ -32,15 +22,16 @@ class IndependentCocoSimTestCase(IndependentSimTestCase):
             simulator_if=simulator_if,
             config=config,
             elaborate_only=elaborate_only,
-            cocotb_module = test._cocotb_module,
+            seed=seed,
+            cocotb_module=test._cocotb_module,
             cocotb_module_location=test._cocotb_module_location,
             test_suite_name=self._name,
             test_cases=[test.name],
         )
 
-class CocoTestRun(TestRun):    
-    def __init__(self, vhdl, top_level, simulator_if, config, elaborate_only, cocotb_module, cocotb_module_location, test_suite_name, test_cases):        
-        TestRun.__init__(self, simulator_if, config, elaborate_only, test_suite_name, test_cases)            
+class CocoTestRun(TestRun):
+    def __init__(self, vhdl, top_level, simulator_if, config, elaborate_only, seed, cocotb_module, cocotb_module_location, test_suite_name, test_cases):
+        TestRun.__init__(self, simulator_if=simulator_if, config=config, elaborate_only=elaborate_only, test_suite_name=test_suite_name, test_cases=test_cases, seed=seed)            
         self._cocotb_module_location = cocotb_module_location
         self._top_level = top_level
         self._vhdl = vhdl
@@ -114,7 +105,8 @@ class CocoTestRun(TestRun):
         for name in self._test_cases:
             results[name] = FAILED
 
-        if not self._config.call_pre_config(output_path, self._simulator_if.output_path):
+        seed = self.get_seed()
+        if not self._config.call_pre_config(output_path, self._simulator_if.output_path, seed):
             return results
         
         sim_ok = self._simulate(output_path)
