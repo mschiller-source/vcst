@@ -83,17 +83,21 @@ class CocoTestRun(TestRun):
             #    #environ["GPI_EXTRA"] = get_cocotb_libs_path() / "cocotbvhpi_aldec:cocotbvhpi_entry_point"
 
         if self._simulator_if.name == "rivierapro":
-            riviera_cocotb_vhpi_lib = get_cocotb_libs_path() / 'libcocotbvhpi_aldec.so'        
-            riviera_cocotb_vpi_lib = get_cocotb_libs_path() / 'libcocotbvpi_aldec.so'        
-            
+            riviera_cocotb_vhpi_lib = get_cocotb_libs_path() / 'libcocotbvhpi_aldec.so'
+            riviera_cocotb_vpi_lib = get_cocotb_libs_path() / 'libcocotbvpi_aldec.so'
+
             append_sim_options(self._config, "rivierapro.vsim_flags", ["+access", "+w", "-interceptcoutput", "-O2"])
-            
+
             if self._vhdl:
                 append_sim_options(self._config, "rivierapro.vsim_flags", [f"-loadvhpi {riviera_cocotb_vhpi_lib}"])
-                #environ["GPI_EXTRA"] = get_cocotb_libs_path() / "cocotbvpi_aldec:cocotbvpi_entry_point"                 
+                #environ["GPI_EXTRA"] = get_cocotb_libs_path() / "cocotbvpi_aldec:cocotbvpi_entry_point"
             else:
                 append_sim_options(self._config, "rivierapro.vsim_flags", [f"-pli {riviera_cocotb_vpi_lib}"])
                 #environ["GPI_EXTRA"] = get_cocotb_libs_path() / "cocotbvhpi_aldec:cocotbvhpi_entry_point"
+
+        if self._simulator_if.name == "nvc":
+            nvc_cocotb_vhpi_lib = get_cocotb_libs_path() / 'libcocotbvhpi_nvc.so'
+            append_sim_options(self._config, "nvc.sim_flags", [f"--load={nvc_cocotb_vhpi_lib}"])
 
     def run(self, output_path, read_output):
         """
